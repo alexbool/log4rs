@@ -3,7 +3,7 @@ jobs:
   build:
     working_directory: ~/build
     docker:
-      - image: jimmycuadra/rust:1.15.0
+      - image: rust:1.19.0
     steps:
       - checkout
       - run: apt-get update
@@ -16,7 +16,7 @@ jobs:
           paths:
             - ~/.cargo/registry/index
       - restore_cache:
-          key: dependencies-1.15-{{ checksum "Cargo.lock" }}
+          key: dependencies-1.19-{{ checksum "Cargo.lock" }}
       - run: cargo test
       - run: |
           for feature in $(cargo read-manifest | jq -r '.features|keys|join("\n")'); do
@@ -25,7 +25,7 @@ jobs:
           done
       - run: cargo test --all-features
       - save_cache:
-          key: dependencies-1.15-{{ checksum "Cargo.lock" }}
+          key: dependencies-1.19-{{ checksum "Cargo.lock" }}
           paths:
             - target
             - ~/.cargo/registry/cache
