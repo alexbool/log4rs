@@ -89,7 +89,7 @@
 //!     additive: false
 //! ```
 use humantime;
-use log::LogLevelFilter;
+use log::LevelFilter;
 use serde::de::{self, Deserialize as SerdeDeserialize, DeserializeOwned};
 use serde_value::Value;
 use std::borrow::ToOwned;
@@ -406,7 +406,7 @@ fn de_duration<'de, D>(d: D) -> Result<Option<Duration>, D::Error>
 #[serde(deny_unknown_fields)]
 struct Root {
     #[serde(deserialize_with = "::priv_serde::de_filter", default = "root_level_default")]
-    level: LogLevelFilter,
+    level: LevelFilter,
     #[serde(default)]
     appenders: Vec<String>,
 }
@@ -420,15 +420,15 @@ impl Default for Root {
     }
 }
 
-fn root_level_default() -> LogLevelFilter {
-    LogLevelFilter::Debug
+fn root_level_default() -> LevelFilter {
+    LevelFilter::Debug
 }
 
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
 struct Logger {
     #[serde(deserialize_with = "::priv_serde::de_filter")]
-    level: LogLevelFilter,
+    level: LevelFilter,
     #[serde(default)]
     appenders: Vec<String>,
     #[serde(default = "logger_additive_default")]

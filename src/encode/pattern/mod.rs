@@ -114,7 +114,7 @@
 //! [MDC]: https://crates.io/crates/log-mdc
 
 use chrono::{Utc, Local};
-use log::{LogRecord, LogLevel};
+use log::{Record, Level};
 use log_mdc;
 use std::default::Default;
 use std::error::Error;
@@ -296,7 +296,7 @@ enum Chunk {
 impl Chunk {
     fn encode(&self,
               w: &mut encode::Write,
-              level: LogLevel,
+              level: Level,
               target: &str,
               location: &Location,
               args: &fmt::Arguments)
@@ -540,7 +540,7 @@ enum FormattedChunk {
 impl FormattedChunk {
     fn encode(&self,
               w: &mut encode::Write,
-              level: LogLevel,
+              level: Level,
               target: &str,
               location: &Location,
               args: &fmt::Arguments)
@@ -568,18 +568,18 @@ impl FormattedChunk {
             }
             FormattedChunk::Highlight(ref chunks) => {
                 match level {
-                    LogLevel::Error => {
+                    Level::Error => {
                         w.set_style(Style::new().text(Color::Red).intense(true))?;
                     }
-                    LogLevel::Warn => w.set_style(Style::new().text(Color::Red))?,
-                    LogLevel::Info => w.set_style(Style::new().text(Color::Blue))?,
+                    Level::Warn => w.set_style(Style::new().text(Color::Red))?,
+                    Level::Info => w.set_style(Style::new().text(Color::Blue))?,
                     _ => {}
                 }
                 for chunk in chunks {
                     chunk.encode(w, level, target, location, args)?;
                 }
                 match level {
-                    LogLevel::Error | LogLevel::Warn | LogLevel::Info => {
+                    Level::Error | Level::Warn | Level::Info => {
                         w.set_style(&Style::new())?
                     }
                     _ => {}
@@ -615,11 +615,11 @@ impl Default for PatternEncoder {
 }
 
 impl Encode for PatternEncoder {
-    fn encode(&self, w: &mut encode::Write, record: &LogRecord) -> Result<(), Box<Error + Sync + Send>> {
+    fn encode(&self, w: &mut encode::Write, record: &Record) -> Result<(), Box<Error + Sync + Send>> {
         let location = Location {
-            module_path: record.location().module_path(),
-            file: record.location().file(),
-            line: record.location().line(),
+            module_path: record.module_path(),
+            file: record.file(),
+            line: record.line(),
         };
         self.append_inner(w, record.level(), record.target(), &location, record.args())
     }
@@ -638,7 +638,7 @@ impl PatternEncoder {
 
     fn append_inner(&self,
                     w: &mut encode::Write,
-                    level: LogLevel,
+                    level: Level,
                     target: &str,
                     location: &Location,
                     args: &fmt::Arguments)
@@ -693,7 +693,7 @@ mod tests {
     #[cfg(feature = "simple_writer")]
     use std::thread;
     #[cfg(feature = "simple_writer")]
-    use log::LogLevel;
+    use log::Level;
     #[cfg(feature = "simple_writer")]
     use log_mdc;
 
@@ -735,7 +735,7 @@ mod tests {
         let pw = PatternEncoder::new("{l} {m} at {M} in {f}:{L}");
         let mut buf = vec![];
         pw.append_inner(&mut SimpleWriter(&mut buf),
-                          LogLevel::Debug,
+                          Level::Debug,
                           "target",
                           &LOCATION,
                           &format_args!("the message"))
@@ -751,7 +751,7 @@ mod tests {
                 let pw = PatternEncoder::new("{T}");
                 let mut buf = vec![];
                 pw.append_inner(&mut SimpleWriter(&mut buf),
-                                  LogLevel::Debug,
+                                  Level::Debug,
                                   "target",
                                   &LOCATION,
                                   &format_args!("message"))
@@ -771,7 +771,7 @@ mod tests {
                 let pw = PatternEncoder::new("{T}");
                 let mut buf = vec![];
                 pw.append_inner(&mut SimpleWriter(&mut buf),
-                                  LogLevel::Debug,
+                                  Level::Debug,
                                   "target",
                                   &LOCATION,
                                   &format_args!("message"))
@@ -796,7 +796,7 @@ mod tests {
 
         let mut buf = vec![];
         pw.append_inner(&mut SimpleWriter(&mut buf),
-                          LogLevel::Debug,
+                          Level::Debug,
                           "",
                           &LOCATION,
                           &format_args!("foo"))
@@ -805,7 +805,7 @@ mod tests {
 
         buf.clear();
         pw.append_inner(&mut SimpleWriter(&mut buf),
-                          LogLevel::Debug,
+                          Level::Debug,
                           "",
                           &LOCATION,
                           &format_args!("foobar!"))
@@ -820,7 +820,7 @@ mod tests {
 
         let mut buf = vec![];
         pw.append_inner(&mut SimpleWriter(&mut buf),
-                          LogLevel::Debug,
+                          Level::Debug,
                           "",
                           &LOCATION,
                           &format_args!("foo"))
@@ -829,7 +829,7 @@ mod tests {
 
         buf.clear();
         pw.append_inner(&mut SimpleWriter(&mut buf),
-                          LogLevel::Debug,
+                          Level::Debug,
                           "",
                           &LOCATION,
                           &format_args!("foobar!"))
@@ -844,7 +844,7 @@ mod tests {
 
         let mut buf = vec![];
         pw.append_inner(&mut SimpleWriter(&mut buf),
-                          LogLevel::Info,
+                          Level::Info,
                           "",
                           &LOCATION,
                           &format_args!("foobar!"))
@@ -859,7 +859,7 @@ mod tests {
 
         let mut buf = vec![];
         pw.append_inner(&mut SimpleWriter(&mut buf),
-                          LogLevel::Info,
+                          Level::Info,
                           "",
                           &LOCATION,
                           &format_args!("foobar!"))
@@ -891,7 +891,7 @@ mod tests {
 
         let mut buf = vec![];
         pw.append_inner(&mut SimpleWriter(&mut buf),
-                          LogLevel::Info,
+                          Level::Info,
                           "",
                           &LOCATION,
                           &format_args!("foobar!"))
@@ -906,7 +906,7 @@ mod tests {
 
         let mut buf = vec![];
         pw.append_inner(&mut SimpleWriter(&mut buf),
-                          LogLevel::Info,
+                          Level::Info,
                           "",
                           &LOCATION,
                           &format_args!("foo"))
@@ -922,7 +922,7 @@ mod tests {
 
         let mut buf = vec![];
         pw.append_inner(&mut SimpleWriter(&mut buf),
-                        LogLevel::Info,
+                        Level::Info,
                         "",
                         &LOCATION,
                         &format_args!("foobar!"))
@@ -938,7 +938,7 @@ mod tests {
 
         let mut buf = vec![];
         pw.append_inner(&mut SimpleWriter(&mut buf),
-                        LogLevel::Info,
+                        Level::Info,
                         "",
                         &LOCATION,
                         &format_args!("foobar!"))
@@ -954,7 +954,7 @@ mod tests {
 
         let mut buf = vec![];
         pw.append_inner(&mut SimpleWriter(&mut buf),
-                        LogLevel::Info,
+                        Level::Info,
                         "",
                         &LOCATION,
                         &format_args!("foobar!"))

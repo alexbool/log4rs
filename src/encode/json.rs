@@ -26,7 +26,7 @@
 
 use chrono::{DateTime, Local};
 use chrono::format::{DelayedFormat, Item, Fixed};
-use log::{LogLevel, LogRecord};
+use log::{Level, Record};
 use log_mdc;
 use std::error::Error;
 use std::fmt;
@@ -63,7 +63,7 @@ impl JsonEncoder {
     fn encode_inner(&self,
                     w: &mut Write,
                     time: DateTime<Local>,
-                    level: LogLevel,
+                    level: Level,
                     target: &str,
                     module_path: &str,
                     file: &str,
@@ -89,14 +89,14 @@ impl JsonEncoder {
 }
 
 impl Encode for JsonEncoder {
-    fn encode(&self, w: &mut Write, record: &LogRecord) -> Result<(), Box<Error + Sync + Send>> {
+    fn encode(&self, w: &mut Write, record: &Record) -> Result<(), Box<Error + Sync + Send>> {
         self.encode_inner(w,
                           Local::now(),
                           record.level(),
                           record.target(),
-                          record.location().module_path(),
-                          record.location().file(),
-                          record.location().line(),
+                          record.module_path(),
+                          record.file(),
+                          record.line(),
                           record.args())
     }
 }
@@ -116,13 +116,13 @@ struct Message<'a> {
     mdc: Mdc,
 }
 
-fn level_str(level: LogLevel) -> &'static str {
+fn level_str(level: Level) -> &'static str {
     match level {
-        LogLevel::Error => "ERROR",
-        LogLevel::Warn => "WARN",
-        LogLevel::Info => "INFO",
-        LogLevel::Debug => "DEBUG",
-        LogLevel::Trace => "TRACE",
+        Level::Error => "ERROR",
+        Level::Warn => "WARN",
+        Level::Info => "INFO",
+        Level::Debug => "DEBUG",
+        Level::Trace => "TRACE",
     }
 }
 
@@ -182,7 +182,7 @@ impl Deserialize for JsonEncoderDeserializer {
 #[cfg(feature = "simple_writer")]
 mod test {
     use chrono::{DateTime, Local};
-    use log::LogLevel;
+    use log::Level;
     use log_mdc;
 
     use encode::writer::simple::SimpleWriter;
@@ -193,7 +193,7 @@ mod test {
         let time = DateTime::parse_from_rfc3339("2016-03-20T14:22:20.644420340-08:00")
             .unwrap()
             .with_timezone(&Local);
-        let level = LogLevel::Debug;
+        let level = Level::Debug;
         let target = "target";
         let module_path = "module_path";
         let file = "file";
